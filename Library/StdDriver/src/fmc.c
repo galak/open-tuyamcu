@@ -44,7 +44,7 @@ void FMC_Close(void)
 /**
   * @brief Execute FMC_ISPCMD_PAGE_ERASE command to erase a flash page. The page size is 4096 bytes.
   * @param[in]  u32PageAddr Address of the flash page to be erased.
-  *             It must be a 4096 bytes aligned address.
+  *             It must be a 512 bytes or 2k bytes aligned address.
   * @return ISP page erase success or not.
   * @retval   0  Success
   * @retval   -1  Erase failed
@@ -661,21 +661,8 @@ uint32_t FMC_CheckAllOne(uint32_t u32addr, uint32_t u32count)
  *           -1  Program failed or time-out
  *           -2  Invalid address 
  */
-#if defined ( __CC_ARM )
-#pragma arm section code="fastcode"
+
 int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
-
-#elif defined ( __ICCARM__ )
-int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len) @ "fastcode"
-
-#elif defined ( __GNUC__ )
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
-__attribute__ ((used, long_call, section(".fastcode"))) int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
-
-#else
-int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
-#endif
 {
 
     uint32_t i, idx, u32OnProg, retval = 0;
@@ -707,7 +694,7 @@ int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
         for (i = idx; i < (FMC_MULTI_WORD_PROG_LEN / 4u); i += 4u) /* Max data length is 256 bytes (512/4 words)*/
         {
             __set_PRIMASK(1u); /* Mask interrupt to avoid status check coherence error*/
-            tout = FMC_TIMEOUT_WRITE;
+            tout = FMC_TIMEOUT_MUL_WRITE;
             do
             {
                 if ((FMC->MPSTS & FMC_MPSTS_MPBUSY_Msk) == 0u)
@@ -733,7 +720,7 @@ int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
                 /* Update new data for D0 */
                 FMC->MPDAT0 = pu32Buf[i];
                 FMC->MPDAT1 = pu32Buf[i + 1u];
-                tout = FMC_TIMEOUT_WRITE;
+                tout = FMC_TIMEOUT_MUL_WRITE;
                 do
                 {
                     if ((FMC->MPSTS & FMC_MPSTS_MPBUSY_Msk) == 0u)
@@ -772,7 +759,7 @@ int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
         {
             u32OnProg = 0u;
             
-            tout = FMC_TIMEOUT_WRITE;
+            tout = FMC_TIMEOUT_MUL_WRITE;
             
             while ((--tout > 0) && (FMC->ISPSTS & FMC_ISPSTS_ISPBUSY_Msk)) { }
 
@@ -788,7 +775,7 @@ int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
     /* Invalidation Cache */
     FMC->FTCTL |= FMC_FTCTL_CACHEINV_Msk;
     
-    tout = FMC_TIMEOUT_WRITE;
+    tout = FMC_ISPCMD_MULTI_PROG;
     
     while ((--tout > 0) && (FMC->FTCTL & FMC_FTCTL_CACHEINV_Msk)) {}
     
@@ -800,13 +787,7 @@ int32_t FMC_WriteMultiple(uint32_t u32Addr, uint32_t pu32Buf[], uint32_t u32Len)
 
     return retval;
 }
-#if defined ( __CC_ARM )
-#pragma arm section
 
-#elif defined ( __GNUC__ )
-#pragma GCC pop_options
-
-#endif
 
 /*@}*/ /* end of group FMC_EXPORTED_FUNCTIONS */
 

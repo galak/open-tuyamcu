@@ -50,6 +50,7 @@ void ADC_Open(ADC_T *adc,
               uint32_t u32ChMask)
 {
     uint32_t u32Delay = SystemCoreClock;    /* 1 second */
+    volatile uint32_t tmp;
 
     g_ADC_i32ErrCode = 0;
 
@@ -79,7 +80,8 @@ void ADC_Open(ADC_T *adc,
                 break;
             }
         }
-
+        /* Read channel 0 ADDR to clear Valid flag of channel 0 that set by calibration. */
+        tmp = adc->ADDR[0];
     }
 
     adc->ADCR = (adc->ADCR & (~(ADC_ADCR_DIFFEN_Msk | ADC_ADCR_ADMD_Msk))) | \
@@ -124,19 +126,17 @@ void ADC_EnableHWTrigger(ADC_T *adc,
                          uint32_t u32Source,
                          uint32_t u32Param)
 {
+    /* Software should clear TRGEN bit and ADST bit before changing TRGS bits. */
+    adc->ADCR &= ~(ADC_ADCR_TRGEN_Msk | ADC_ADCR_ADST_Msk);
+
     if(u32Source == ADC_ADCR_TRGS_STADC)
     {
-        adc->ADCR = (adc->ADCR & ~(ADC_ADCR_TRGS_Msk | ADC_ADCR_TRGCOND_Msk | ADC_ADCR_TRGEN_Msk)) |
+        adc->ADCR = (adc->ADCR & ~(ADC_ADCR_TRGS_Msk | ADC_ADCR_TRGCOND_Msk)) |
                     ((u32Source) | (u32Param) | ADC_ADCR_TRGEN_Msk);
-    }
-    else if(u32Source == ADC_ADCR_TRGS_TIMER)
-    {
-        adc->ADCR = (adc->ADCR & ~(ADC_ADCR_TRGS_Msk | ADC_ADCR_TRGCOND_Msk | ADC_ADCR_TRGEN_Msk)) |
-                    ((u32Source) | ADC_ADCR_TRGEN_Msk);
     }
     else
     {
-        adc->ADCR = (adc->ADCR & ~(ADC_ADCR_TRGS_Msk | ADC_ADCR_TRGCOND_Msk | ADC_ADCR_TRGEN_Msk)) |
+        adc->ADCR = (adc->ADCR & ~(ADC_ADCR_TRGS_Msk | ADC_ADCR_TRGCOND_Msk)) |
                     ((u32Source) | ADC_ADCR_TRGEN_Msk);
     }
     return;
@@ -149,7 +149,9 @@ void ADC_EnableHWTrigger(ADC_T *adc,
   */
 void ADC_DisableHWTrigger(ADC_T *adc)
 {
-    adc->ADCR &= ~(ADC_ADCR_TRGS_Msk | ADC_ADCR_TRGCOND_Msk | ADC_ADCR_TRGEN_Msk);
+    /* Software should clear TRGEN bit and ADST bit before changing TRGS bits. */
+    adc->ADCR &= ~(ADC_ADCR_TRGEN_Msk | ADC_ADCR_ADST_Msk);
+    adc->ADCR &= ~(ADC_ADCR_TRGS_Msk | ADC_ADCR_TRGCOND_Msk);
     return;
 }
 

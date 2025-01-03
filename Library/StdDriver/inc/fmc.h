@@ -85,6 +85,7 @@ extern "C"
 
 #define FMC_TIMEOUT_READ        ((SystemCoreClock/10)/4) /*!< Read command time-out 100 ms         \hideinitializer */
 #define FMC_TIMEOUT_WRITE       ((SystemCoreClock/10)/4) /*!< Write command time-out 100 ms        \hideinitializer */
+#define FMC_TIMEOUT_MUL_WRITE   (SystemCoreClock/1)      /*!< Write command time-out 100 ms        \hideinitializer */
 #define FMC_TIMEOUT_ERASE       ((SystemCoreClock/10)/2) /*!< Erase command time-out 200 ms        \hideinitializer */
 #define FMC_TIMEOUT_CHKSUM      (SystemCoreClock/2)      /*!< Get checksum command time-out 2 s    \hideinitializer */
 #define FMC_TIMEOUT_CHKALLONE   (SystemCoreClock/2)      /*!< Check-all-one command time-out 2 s   \hideinitializer */
@@ -165,7 +166,7 @@ __STATIC_INLINE uint32_t FMC_GetVECMAP(void)
   */
 __STATIC_INLINE uint32_t FMC_ReadCID(void)
 {
-    uint32_t  tout = FMC_TIMEOUT_READ;
+    uint32_t volatile tout = FMC_TIMEOUT_READ;
 
     g_FMC_i32ErrCode = 0;
 
@@ -200,7 +201,7 @@ __STATIC_INLINE uint32_t FMC_ReadCID(void)
   */
 __STATIC_INLINE uint32_t FMC_ReadPID(void)
 {
-    uint32_t  tout = FMC_TIMEOUT_READ;
+    uint32_t volatile tout = FMC_TIMEOUT_READ;
 
     g_FMC_i32ErrCode = 0;
 
@@ -230,7 +231,7 @@ __STATIC_INLINE uint32_t FMC_ReadPID(void)
  */
 __STATIC_INLINE uint32_t FMC_ReadUID(uint8_t u8Index)
 {
-    uint32_t  tout = FMC_TIMEOUT_READ;
+    uint32_t volatile tout = FMC_TIMEOUT_READ;
 
     g_FMC_i32ErrCode = 0;
 
@@ -261,7 +262,7 @@ __STATIC_INLINE uint32_t FMC_ReadUID(uint8_t u8Index)
   */
 __STATIC_INLINE uint32_t FMC_ReadUCID(uint32_t u32Index)
 {
-    uint32_t  tout = FMC_TIMEOUT_READ;
+    uint32_t volatile tout = FMC_TIMEOUT_READ;
 
     g_FMC_i32ErrCode = 0;
 
@@ -296,7 +297,7 @@ __STATIC_INLINE uint32_t FMC_ReadUCID(uint32_t u32Index)
  */
 __STATIC_INLINE int32_t FMC_SetVectorPageAddr(uint32_t u32PageAddr)
 {
-    uint32_t  tout = FMC_TIMEOUT_WRITE;
+    uint32_t volatile tout = FMC_TIMEOUT_WRITE;
 
     g_FMC_i32ErrCode = 0;
 
